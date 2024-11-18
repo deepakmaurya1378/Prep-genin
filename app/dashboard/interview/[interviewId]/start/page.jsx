@@ -46,7 +46,7 @@ function StartInterview({ params }) {
     <div className='p-8'>
       
       <div className="flex justify-center ">
-        <h1 className='text-3xl text-justify font-bold'>Welcome to Your Interview</h1>
+        <h1 className='text-3xl text-center font-bold'>Welcome to Your Interview</h1>
           </div>
       
       <div className='grid grid-cols-1 md:grid-cols-2 gap-10'>
