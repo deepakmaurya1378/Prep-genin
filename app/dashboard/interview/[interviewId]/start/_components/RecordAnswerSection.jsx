@@ -37,10 +37,15 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex,interv
   });
 
   // Update user answer whenever new results come in
-  useEffect(() => {
-    results?.map((result) => (
-      setUserAnswer(prevAns => prevAns + result?.transcript)
-    ))
+  // useEffect(() => {
+  //   results?.map((result) => (
+  //     setUserAnswer(prevAns => prevAns + result?.transcript)
+  //   ))
+  // }, [results]);
+    useEffect(() => {
+    if (results?.length > 0) {
+      setUserAnswer(results.map(result => result.transcript).join(' '));
+    }
   }, [results]);
 
   useEffect(() => {
