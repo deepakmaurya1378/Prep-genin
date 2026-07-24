@@ -1,65 +1,68 @@
 "use client"
-import { UserButton } from '@clerk/nextjs';
 import React, { useEffect, useState } from 'react';
 import AddNewInterview from './_components/AddNewInterview';
 import InterviewList from './_components/InterviewList';
-
+import { Sparkles, PlusCircle, History } from 'lucide-react';
 
 function Dashboard() {
-
   const [isFirstVisit, setIsFirstVisit] = useState(false);
 
   useEffect(() => {
-    // Check if 'firstVisit' flag exists in localStorage
     const isFirstTime = localStorage.getItem('firstVisit');
-
     if (!isFirstTime) {
-      // If it's the first time, show 'Welcome' and set the flag
       setIsFirstVisit(true);
       localStorage.setItem('firstVisit', 'false');
     } else {
-      // If it's not the first time, show 'Welcome Back'
       setIsFirstVisit(false);
     }
   }, []);
+
   return (
-    <div className=" min-h-screen mt-10 ">
-      {/* Header Section */}
-      <h2 className='font-bold text-shadow-xl  text-blue-600 text-3xl pb-5'>Dashboard</h2>
-
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-        <h2 className="text-xl font-semibold text-gray-800">
-          {isFirstVisit ? "Welcome to Your Mock Interview!" : "Welcome Back!"}
-        </h2>
-        <p className="text-gray-600">
-          {isFirstVisit 
-            ? "Start by creating your first AI mock interview. Let’s help you prepare!" 
-            : "Create and manage your AI mock interviews with ease. Start by creating a new interview or view your past interviews below."}
-        </p>
-      </div>
-
-       {/* Add New Interview Section  */}
-      <section className="mb-10">
-        <h3 className="text-2xl font-semibold text-gray-700 mb-6">Create New Interview</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AddNewInterview />
+    <div className="py-6">
+      {/* Top Welcome Hero Banner */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-8 text-white shadow-xl mb-10">
+          <div className="absolute right-[-5%] top-[-20%] w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative z-10 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-white text-xs font-medium mb-4">
+              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+              <span>AI-Powered Interview Coach</span>
+            </div>
+            
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2">
+              {isFirstVisit ? "Welcome to Prep-Genin!" : "Welcome Back to Your Workspace!"}
+            </h1>
+            <p className="text-blue-100 text-sm sm:text-base leading-relaxed">
+              {isFirstVisit 
+                ? "Generate your personalized AI mock interview in seconds and accelerate your career prep." 
+                : "Manage your ongoing AI mock interviews, practice voice responses, and review tailored AI performance feedback."}
+            </p>
+          </div>
         </div>
-      </section>
 
-      {/* Interview List Section */}
-      <section>
-        <h3 className="text-2xl font-semibold text-gray-700 mb-6">Your Interviews</h3>
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <InterviewList />
-        </div>
-      </section>  
-      <div className='flex justify-center mt-20'>
-         <h6> Prep-Genin. All rights reserved.</h6>
-      </div>
+        {/* Section 1: Create New Interview */}
+        <section className="mb-12">
+          <div className="flex items-center gap-2 mb-6">
+            <PlusCircle className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Create New Interview</h2>
+          </div>
+          <div className="max-w-sm">
+            <AddNewInterview />
+          </div>
+        </section>
+
+        {/* Section 2: Interview History */}
+        <section className="mb-10">
+          <div className="flex items-center gap-2 mb-6">
+            <History className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Previous Mock Interviews</h2>
+          </div>
+          <div className="glass-card p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
+            <InterviewList />
+          </div>
+        </section>
     </div>
-
   );
 }
 
 export default Dashboard;
-
