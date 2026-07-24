@@ -4,14 +4,23 @@
 
 import Groq from "groq-sdk";
 
-const groq = new Groq({
-  apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY,
-  dangerouslyAllowBrowser: true, // required for client-side Next.js
-});
+// Constructed lazily (not at module load) so importing this file never
+// crashes page rendering/build just because the key isn't set yet —
+// the error only surfaces when the feature is actually used.
+let groq = null;
+function getGroqClient() {
+  if (!groq) {
+    groq = new Groq({
+      apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY,
+      dangerouslyAllowBrowser: true, // required for client-side Next.js
+    });
+  }
+  return groq;
+}
 
 export async function generateInterviewContent(prompt) {
   try {
-    const completion = await groq.chat.completions.create({
+    const completion = await getGroqClient().chat.completions.create({
       model: "llama-3.3-70b-versatile",
       messages: [
         {
