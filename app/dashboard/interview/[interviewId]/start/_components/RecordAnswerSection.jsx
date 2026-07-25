@@ -10,7 +10,7 @@ import { UserAnswer } from '@/utils/schema';
 import { useUser } from '@clerk/nextjs';
 import moment from 'moment';
 
-function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, interviewData }) {
+function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, interviewData, onAnswerSaved }) {
   const [userAnswer, setUserAnswer] = useState('');
   const [interimText, setInterimText] = useState('');
   const { user } = useUser();
@@ -179,11 +179,17 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
       clearTimeout(restartTimeoutRef.current);
       restartTimeoutRef.current = null;
     }
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
     stopWaveform();
-    setIsRecording(false);
+    if (recognitionRef.current) {
+      // Don't flip isRecording here — recognition.stop() still delivers a
+      // trailing final onresult before onend fires. Setting it early races
+      // that last chunk and can save a truncated (or empty) answer. The
+      // onend handler's non-restart branch is the one true "fully stopped"
+      // signal, so let it flip isRecording once the transcript is final.
+      recognitionRef.current.stop();
+    } else {
+      setIsRecording(false);
+    }
   }, []);
 
   const StartStopRecording = () => {
@@ -247,6 +253,7 @@ Based on the above interview question and user answer, provide a rating (1-10) a
         toast.success('✅ Answer recorded & analyzed!');
         setUserAnswer('');
         setInterimText('');
+        onAnswerSaved?.();
       }
     } catch (err) {
       console.error('Error generating feedback:', err);

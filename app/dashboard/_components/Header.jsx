@@ -27,6 +27,8 @@ function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm dark:shadow-none transition-all duration-300">
+      {/* Subtle animated accent line */}
+      <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-60 animate-shimmer" style={{ backgroundSize: '200% 100%' }} />
       <div className="max-w-7xl mx-auto flex items-center justify-between px-6 h-16 relative">
         {/* Floating Brand Logo */}
         <Link
@@ -35,9 +37,10 @@ function Header() {
         >
           <Image
             src="/Prepgeninlogo.png"
-            width={145}
-            height={40}
+            width={166}
+            height={35}
             alt="Prep-Genin Logo"
+            priority
             className="cursor-pointer object-contain select-none dark:brightness-120 filter drop-shadow-sm"
           />
         </Link>
