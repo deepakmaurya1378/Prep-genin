@@ -33,6 +33,7 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
   const audioCtxRef = useRef(null);
   const wantRecordingRef = useRef(false); // tracks user intent, so we can auto-restart after mobile browsers auto-stop
   const restartTimeoutRef = useRef(null);
+  const sessionFinalTextRef = useRef(''); // cumulative final text already appended for the CURRENT recognition instance
 
   // Animate waveform using Web Audio API. Pass an existing MediaStream to
   // analyze it directly — IMPORTANT on mobile: requesting a second,
@@ -202,14 +203,22 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
     recognition.onstart = () => {
       setIsRecording(true);
       setMicError(null);
+      sessionFinalTextRef.current = ''; // fresh recognition session (first start or an auto-restart)
       startWaveform();
     };
 
     recognition.onresult = (event) => {
+      // Recompute the full final transcript for THIS session from scratch on
+      // every event, instead of trusting event.resultIndex. Some Android
+      // Chrome builds re-fire onresult with isFinal:true for the same result
+      // slot as it keeps growing word-by-word (rather than firing once when
+      // truly final), and resultIndex doesn't reliably skip past what we
+      // already processed — incrementally appending on that basis causes the
+      // transcript to snowball into repeated, ever-growing duplicates.
       let finalTranscript = '';
       let interim = '';
 
-      for (let i = event.resultIndex; i < event.results.length; i++) {
+      for (let i = 0; i < event.results.length; i++) {
         if (event.results[i].isFinal) {
           finalTranscript += event.results[i][0].transcript + ' ';
         } else {
@@ -217,9 +226,15 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
         }
       }
 
-      if (finalTranscript) {
-        setUserAnswer(prev => prev + finalTranscript);
+      const previous = sessionFinalTextRef.current;
+      const delta = finalTranscript.startsWith(previous)
+        ? finalTranscript.slice(previous.length)
+        : finalTranscript; // text was revised rather than extended — safe fallback
+
+      if (delta) {
+        setUserAnswer(prev => prev + delta);
       }
+      sessionFinalTextRef.current = finalTranscript;
       setInterimText(interim);
     };
 
