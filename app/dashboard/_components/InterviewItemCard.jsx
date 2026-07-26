@@ -44,7 +44,7 @@ function InterviewItemCard({ interview, onDeleted }) {
     }
 
     return (
-    <div className='glass-card p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-xl'>
+    <div className='bg-white dark:bg-slate-900/60 backdrop-blur-xl p-5 rounded-2xl border border-blue-100 dark:border-slate-800/80 shadow-sm flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-xl'>
         <div>
           <div className='flex items-start justify-between gap-3 mb-3'>
             <div className='w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-400/10 flex items-center justify-center text-blue-600 dark:text-blue-400 flex-shrink-0'>

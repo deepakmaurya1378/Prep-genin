@@ -146,3 +146,31 @@ body {
   0%   { background-position: -200% 0; }
   100% { background-position:  200% 0; }
 }
+
+/* Diagonal laser light sweep — used on auth pages */
+.laser-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.laser-beam {
+  position: absolute;
+  top: -30%;
+  left: var(--laser-left, -10%);
+  width: 1px;
+  height: 160%;
+  transform: rotate(-32deg);
+  background: linear-gradient(180deg, transparent, rgba(59, 130, 246, 0.5), transparent);
+  filter: blur(0.5px) drop-shadow(0 0 5px rgba(59, 130, 246, 0.3));
+  animation: laserSweep var(--laser-duration, 14s) ease-in-out infinite;
+  animation-delay: var(--laser-delay, 0s);
+}
+
+@keyframes laserSweep {
+  0%   { left: -10%; opacity: 0; }
+  15% { opacity: 0.5; }
+  85% { opacity: 0.5; }
+  100% { left: 110%; opacity: 0; }
+}

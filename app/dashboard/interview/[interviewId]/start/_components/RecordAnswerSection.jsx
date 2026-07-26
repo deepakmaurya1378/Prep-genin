@@ -1,11 +1,13 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { db } from '@/utils/db';
+import { and, eq } from 'drizzle-orm';
 import Webcam from 'react-webcam';
 import { Button } from '@/components/ui/button';
 import { Mic, StopCircle, Video, VideoOff, RefreshCw, WebcamIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { generateInterviewContent } from '@/utils/GrokAIModal';
+import { transcribeAudioBlob } from '@/utils/whisperFallback';
 import { UserAnswer } from '@/utils/schema';
 import { useUser } from '@clerk/nextjs';
 import moment from 'moment';
@@ -19,8 +21,13 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
   const [isRecording, setIsRecording] = useState(false);
   const [micError, setMicError] = useState(null);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [transcribing, setTranscribing] = useState(false);
+  const [modelProgress, setModelProgress] = useState(null);
 
   const recognitionRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const fallbackStreamRef = useRef(null);
   const analyserRef = useRef(null);
   const animFrameRef = useRef(null);
   const audioCtxRef = useRef(null);
@@ -68,14 +75,89 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
     setAudioLevel(0);
   };
 
+  // Pick a MediaRecorder mime type the current browser actually supports.
+  const pickAudioMimeType = () => {
+    const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac'];
+    for (const type of candidates) {
+      if (window.MediaRecorder?.isTypeSupported?.(type)) return type;
+    }
+    return undefined; // let the browser pick a default
+  };
+
+  // Fallback for browsers with no native SpeechRecognition (Safari/iOS, Firefox):
+  // record raw audio and transcribe it on-device with a small Whisper model.
+  const startFallbackRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      fallbackStreamRef.current = stream;
+
+      const mimeType = pickAudioMimeType();
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        fallbackStreamRef.current?.getTracks().forEach((t) => t.stop());
+        fallbackStreamRef.current = null;
+        stopWaveform();
+        setIsRecording(false);
+
+        const blob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
+        audioChunksRef.current = [];
+        if (blob.size < 1000) return; // essentially silent/empty
+
+        setTranscribing(true);
+        try {
+          const text = await transcribeAudioBlob(blob, (progress) => {
+            if (progress?.status === 'progress' && progress.total) {
+              setModelProgress(Math.round((progress.loaded / progress.total) * 100));
+            }
+          });
+          setModelProgress(null);
+          if (text) {
+            setUserAnswer((prev) => (prev ? prev + ' ' : '') + text);
+          } else {
+            toast.error("Couldn't make out any speech — please try again.");
+          }
+        } catch (err) {
+          console.error('On-device transcription failed:', err);
+          toast.error('Transcription failed. Please try again.');
+        }
+        setTranscribing(false);
+      };
+
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      wantRecordingRef.current = true;
+      setIsRecording(true);
+      setMicError(null);
+      startWaveform();
+    } catch (err) {
+      console.error('Mic access failed:', err);
+      setMicError('Microphone access denied or unavailable. Please allow microphone permissions and try again.');
+      toast.error('Microphone permission denied.');
+    }
+  };
+
+  const stopFallbackRecording = () => {
+    wantRecordingRef.current = false;
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    mediaRecorderRef.current = null;
+  };
+
   // Initialize and start speech recognition
   const startRecording = useCallback(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      setMicError('Your browser does not support Speech Recognition. Please use Chrome or Edge (desktop or Android).');
-      toast.error('Browser not supported for speech recognition.');
+      // No native speech engine (Safari/iOS, Firefox) — transcribe on-device instead.
+      startFallbackRecording();
       return;
     }
 
@@ -179,6 +261,12 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
       clearTimeout(restartTimeoutRef.current);
       restartTimeoutRef.current = null;
     }
+
+    if (mediaRecorderRef.current) {
+      stopFallbackRecording();
+      return;
+    }
+
     stopWaveform();
     if (recognitionRef.current) {
       // Don't flip isRecording here — recognition.stop() still delivers a
@@ -213,16 +301,22 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
       wantRecordingRef.current = false;
       if (restartTimeoutRef.current) clearTimeout(restartTimeoutRef.current);
       if (recognitionRef.current) recognitionRef.current.stop();
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      fallbackStreamRef.current?.getTracks().forEach((t) => t.stop());
       stopWaveform();
     };
   }, []);
 
-  // Save answer when recording stops and answer is long enough
+  // Save answer once recording has fully stopped AND (for the on-device
+  // fallback) transcription has finished — the fallback flips isRecording
+  // false immediately on stop, well before the async transcript is ready.
   useEffect(() => {
-    if (!isRecording && userAnswer?.trim().length > 5) {
+    if (!isRecording && !transcribing && userAnswer?.trim().length > 5) {
       UpdateUserAnswer();
     }
-  }, [isRecording]);
+  }, [isRecording, transcribing]);
 
   const UpdateUserAnswer = async () => {
     if (!userAnswer?.trim() || userAnswer.trim().length <= 5) return;
@@ -238,9 +332,20 @@ Based on the above interview question and user answer, provide a rating (1-10) a
       const mockJsonRespText = await generateInterviewContent(feedbackPrompt);
       const JsonFeedbackResp = JSON.parse(mockJsonRespText);
 
+      const question = mockInterviewQuestion[activeQuestionIndex]?.question;
+
+      // Re-recording an answer should replace the previous attempt for this
+      // question, not add a duplicate row alongside it.
+      await db.delete(UserAnswer).where(
+        and(
+          eq(UserAnswer.mockIdRef, interviewData?.mockId),
+          eq(UserAnswer.question, question)
+        )
+      );
+
       const resp = await db.insert(UserAnswer).values({
         mockIdRef: interviewData?.mockId,
-        question: mockInterviewQuestion[activeQuestionIndex]?.question,
+        question,
         correctAns: mockInterviewQuestion[activeQuestionIndex]?.answer,
         userAns: userAnswer,
         feedback: JsonFeedbackResp?.feedback,
@@ -336,6 +441,16 @@ Based on the above interview question and user answer, provide a rating (1-10) a
           </div>
         )}
 
+        {/* On-device transcription status (Safari/iOS/Firefox fallback) */}
+        {transcribing && (
+          <div className="w-full mt-3 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/50 text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
+            <RefreshCw className="w-3.5 h-3.5 animate-spin shrink-0" />
+            {modelProgress !== null
+              ? `Downloading on-device speech model (${modelProgress}%, first time only)...`
+              : 'Transcribing your answer on-device...'}
+          </div>
+        )}
+
         {/* Control Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-3 mt-5 w-full">
           <Button
@@ -351,7 +466,7 @@ Based on the above interview question and user answer, provide a rating (1-10) a
           </Button>
 
           <Button
-            disabled={loading}
+            disabled={loading || transcribing}
             onClick={StartStopRecording}
             className={`rounded-xl text-xs font-semibold px-5 transition-all shadow-md ${isRecording
                 ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/25'
@@ -361,6 +476,10 @@ Based on the above interview question and user answer, provide a rating (1-10) a
             {loading ? (
               <span className="flex items-center gap-2">
                 <RefreshCw className="w-4 h-4 animate-spin" /> Analyzing...
+              </span>
+            ) : transcribing ? (
+              <span className="flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 animate-spin" /> Transcribing...
               </span>
             ) : isRecording ? (
               <span className="flex items-center gap-2">
@@ -378,9 +497,11 @@ Based on the above interview question and user answer, provide a rating (1-10) a
         <p className="text-xs text-slate-400 dark:text-slate-500 mt-3 text-center">
           {isRecording
             ? '🎙️ Listening... Speak clearly into your microphone'
-            : loading
-              ? '⚡ AI is analyzing your answer...'
-              : 'Click "Record Answer" to start speaking'}
+            : transcribing
+              ? '🧠 Converting your speech to text on-device...'
+              : loading
+                ? '⚡ AI is analyzing your answer...'
+                : 'Click "Record Answer" to start speaking'}
         </p>
       </div>
     </div>

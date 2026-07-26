@@ -108,7 +108,7 @@ export default function Home() {
         </div>
 
         {/* Trust bar */}
-        <div className="mt-14 flex items-center gap-2 text-slate-400 dark:text-slate-500 text-xs">
+        <div className="mt-14 flex flex-col sm:flex-row items-center gap-2 text-slate-400 dark:text-slate-500 text-xs text-center sm:text-left">
           <div className="flex">
             {[...Array(5)].map((_, i) => (
               <Star key={i} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
