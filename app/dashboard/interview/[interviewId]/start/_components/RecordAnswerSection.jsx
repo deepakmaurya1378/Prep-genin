@@ -34,16 +34,28 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
   const wantRecordingRef = useRef(false); // tracks user intent, so we can auto-restart after mobile browsers auto-stop
   const restartTimeoutRef = useRef(null);
 
-  // Animate waveform using Web Audio API
-  const startWaveform = async () => {
+  // Animate waveform using Web Audio API. Pass an existing MediaStream to
+  // analyze it directly — IMPORTANT on mobile: requesting a second,
+  // independent getUserMedia stream while the native SpeechRecognition
+  // engine is also trying to capture the mic can starve it of audio on
+  // some Android devices (recording looks like it's happening because our
+  // own stream works, but the recognizer never gets real audio and
+  // silently produces no transcript). When no stream is passed (native
+  // recognition path, which owns mic capture internally and gives us no
+  // access to it), fall back to a synthetic pulse instead of touching the
+  // mic ourselves.
+  const startWaveform = async (existingStream) => {
+    if (!existingStream) {
+      startSyntheticPulse();
+      return;
+    }
     // Recognition auto-restarts on mobile can re-fire onstart; avoid stacking
-    // multiple live AudioContexts/mic streams when that happens.
+    // multiple live AudioContexts when that happens.
     if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') return;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       audioCtxRef.current = ctx;
-      const source = ctx.createMediaStreamSource(stream);
+      const source = ctx.createMediaStreamSource(existingStream);
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 256;
       source.connect(analyser);
@@ -60,6 +72,17 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
     } catch (_) {
       // silent — waveform is decorative
     }
+  };
+
+  // Purely decorative "breathing" pulse for the native recognition path,
+  // where we deliberately avoid opening our own mic stream (see above).
+  const startSyntheticPulse = () => {
+    const tick = () => {
+      const t = Date.now() / 300;
+      setAudioLevel(90 + Math.sin(t) * 40);
+      animFrameRef.current = requestAnimationFrame(tick);
+    };
+    tick();
   };
 
   const stopWaveform = () => {
@@ -134,7 +157,7 @@ function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, inter
       wantRecordingRef.current = true;
       setIsRecording(true);
       setMicError(null);
-      startWaveform();
+      startWaveform(stream); // reuse the same stream instead of opening a second mic capture
     } catch (err) {
       console.error('Mic access failed:', err);
       setMicError('Microphone access denied or unavailable. Please allow microphone permissions and try again.');
