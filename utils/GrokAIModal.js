@@ -1,5 +1,5 @@
 // 📁 /utils/GeminiAIModal.js
-// Using Groq (llama-3.3-70b) — FREE tier: 500 req/day, 14,400 tokens/min
+// Using Groq (openai/gpt-oss-120b) — FREE tier: 500 req/day, 14,400 tokens/min
 // Sign up for free API key at: https://console.groq.com
 
 import Groq from "groq-sdk";
@@ -21,7 +21,8 @@ function getGroqClient() {
 export async function generateInterviewContent(prompt) {
   try {
     const completion = await getGroqClient().chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: "openai/gpt-oss-120b",
+      reasoning_effort: "low",
       messages: [
         {
           role: "system",
