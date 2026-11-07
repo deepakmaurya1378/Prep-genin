@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Sparkles, Briefcase, Code2, Clock, Plus } from "lucide-react";
+import RobotLoader from "@/components/RobotLoader";
 import { MockInterview } from "@/utils/schema";
 import { useUser } from "@clerk/nextjs";
 import moment from "moment";
@@ -102,7 +103,7 @@ function AddNewInterview() {
     <div>
       {/* Trigger Card */}
       <div
-        className="p-8 border-2 border-dashed border-blue-400/40 hover:border-blue-500 dark:border-blue-500/30 dark:hover:border-blue-400 rounded-2xl bg-gradient-to-br from-blue-50/60 to-indigo-50/40 dark:from-blue-950/20 dark:to-indigo-950/10 hover:from-blue-50 hover:to-indigo-50/60 dark:hover:from-blue-950/40 dark:hover:to-indigo-950/20 cursor-pointer transition-all duration-300 group text-center flex flex-col items-center justify-center min-h-[170px] shadow-sm hover:shadow-md hover:-translate-y-0.5"
+        className="btn-shine p-8 border-2 border-dashed border-blue-400/40 hover:border-blue-500 dark:border-blue-500/30 dark:hover:border-blue-400 rounded-2xl bg-gradient-to-br from-blue-50/60 to-indigo-50/40 dark:from-blue-950/20 dark:to-indigo-950/10 hover:from-blue-50 hover:to-indigo-50/60 dark:hover:from-blue-950/40 dark:hover:to-indigo-950/20 cursor-pointer transition-all duration-300 group text-center flex flex-col items-center justify-center min-h-[170px] shadow-sm hover:shadow-md hover:-translate-y-0.5"
         onClick={() => setOpenDialog(true)}
       >
         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white mb-4 shadow-lg shadow-blue-500/30 group-hover:scale-110 group-hover:shadow-blue-500/40 transition-all duration-300">
@@ -137,17 +138,9 @@ function AddNewInterview() {
 
           {/* Loading Overlay */}
           {loading && (
-            <div className="py-8 flex flex-col items-center gap-5">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-full border-4 border-blue-500/20 border-t-blue-500 animate-spin" />
-                <Sparkles className="w-6 h-6 text-blue-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
-              </div>
-              <div className="text-center">
-                <p className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
-                  {LOADING_STEPS[loadingStep]}
-                </p>
-                <p className="text-xs text-slate-400 mt-1">This takes about 5-10 seconds</p>
-              </div>
+            <div className="py-4 flex flex-col items-center gap-3">
+              <RobotLoader scene="questions" message={LOADING_STEPS[loadingStep]} />
+              <p className="text-xs text-slate-400 -mt-1">This takes about 5-10 seconds</p>
               {/* Step dots */}
               <div className="flex gap-2">
                 {LOADING_STEPS.map((_, i) => (

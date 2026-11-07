@@ -14,6 +14,7 @@ import { db } from '@/utils/db'
 import { MockInterview, UserAnswer } from '@/utils/schema'
 import { eq } from 'drizzle-orm'
 import { toast } from 'sonner'
+import { SpotlightCard } from '@/components/motion'
 
 function InterviewItemCard({ interview, onDeleted }) {
     const router = useRouter();
@@ -44,7 +45,7 @@ function InterviewItemCard({ interview, onDeleted }) {
     }
 
     return (
-    <div className='bg-white dark:bg-slate-900/60 backdrop-blur-xl p-5 rounded-2xl border border-blue-100 dark:border-slate-800/80 shadow-sm flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-xl'>
+    <SpotlightCard className='h-full bg-white dark:bg-slate-900/60 backdrop-blur-xl p-5 rounded-2xl border border-blue-100 dark:border-slate-800/80 shadow-sm flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-900/10'>
         <div>
           <div className='flex items-start justify-between gap-3 mb-3'>
             <div className='w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-400/10 flex items-center justify-center text-blue-600 dark:text-blue-400 flex-shrink-0'>
@@ -122,7 +123,7 @@ function InterviewItemCard({ interview, onDeleted }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-    </div>
+    </SpotlightCard>
   )
 }
 

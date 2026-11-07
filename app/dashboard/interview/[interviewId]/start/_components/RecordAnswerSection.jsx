@@ -10,6 +10,7 @@ import { generateInterviewContent } from '@/utils/GrokAIModal';
 import { transcribeAudioBlob } from '@/utils/whisperFallback';
 import { UserAnswer } from '@/utils/schema';
 import { useUser } from '@clerk/nextjs';
+import RobotLoader from '@/components/RobotLoader';
 import moment from 'moment';
 
 function RecordAnswerSection({ mockInterviewQuestion, activeQuestionIndex, interviewData, onAnswerSaved }) {
@@ -486,6 +487,13 @@ Based on the above interview question and user answer, provide a rating (1-10) a
             {modelProgress !== null
               ? `Downloading on-device speech model (${modelProgress}%, first time only)...`
               : 'Transcribing your answer on-device...'}
+          </div>
+        )}
+
+        {/* Robots scoring the answer */}
+        {loading && (
+          <div className="w-full mt-4 py-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 flex justify-center">
+            <RobotLoader scene="grading" size="sm" />
           </div>
         )}
 

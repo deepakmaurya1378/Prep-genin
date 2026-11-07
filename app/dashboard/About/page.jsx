@@ -18,6 +18,7 @@ import {
   ChevronsUpDown,
   ArrowRight,
 } from 'lucide-react';
+import { Reveal, SplitText, SpotlightCard, Stagger, StaggerItem, Magnetic } from '@/components/motion';
 
 const WHY_ITEMS = [
   {
@@ -66,7 +67,7 @@ const STEPS = [
 
 const FAQS = [
   {
-    q: 'Is Prep-Genin free to use?',
+    q: 'Is PrepGenin free to use?',
     a: 'Yes — creating and taking mock interviews is free. Paid plans (see Upgrade) exist for higher usage limits, not for gating core features.',
   },
   {
@@ -113,42 +114,47 @@ function About() {
 
         {/* Hero */}
         <div className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 text-xs font-semibold mb-4">
+          <Reveal className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 text-xs font-semibold mb-4">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>About Prep-Genin</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">
-            Interview practice that feels <span className="gradient-text">like the real thing</span>
-          </h1>
-          <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Prep-Genin builds a fresh, role-specific mock interview in seconds, then coaches you with honest,
+            <span>About PrepGenin</span>
+          </Reveal>
+          <SplitText
+            className="text-3xl sm:text-5xl font-extrabold tracking-[-0.03em] mb-4"
+            segments={[{ text: "Interview practice that feels" }, { text: "like the real thing", className: "gradient-text pb-1" }]}
+            delay={0.1}
+          />
+          <Reveal delay={0.35} as="p" className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            PrepGenin builds a fresh, role-specific mock interview in seconds, then coaches you with honest,
             per-answer feedback — so the first time you speak your answers out loud isn't in front of the
             real interviewer.
-          </p>
+          </Reveal>
         </div>
 
         {/* Why Prep-Genin */}
         <section className="mb-14">
-          <h2 className="text-xl font-bold text-foreground mb-6 text-center">Why Prep-Genin</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <Reveal as="h2" className="text-2xl font-bold tracking-tight text-foreground mb-6 text-center">Why PrepGenin</Reveal>
+          <Stagger className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {WHY_ITEMS.map((item, i) => (
-              <div key={i} className="glass-card p-6 rounded-2xl">
+              <StaggerItem key={i}>
+              <SpotlightCard className="glass-card h-full p-6 rounded-2xl hover:-translate-y-1">
                 <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white mb-4 shadow-md`}>
                   {item.icon}
                 </div>
                 <h3 className="font-bold text-foreground mb-1.5">{item.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-              </div>
+              </SpotlightCard>
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
         </section>
 
         {/* How it works */}
         <section className="mb-14">
-          <h2 className="text-xl font-bold text-foreground mb-6 text-center">How it works</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <Reveal as="h2" className="text-2xl font-bold tracking-tight text-foreground mb-6 text-center">How it works</Reveal>
+          <Stagger className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {STEPS.map((step, i) => (
-              <div key={i} className="relative glass-card p-6 rounded-2xl">
+              <StaggerItem key={i}>
+              <SpotlightCard className="relative glass-card h-full p-6 rounded-2xl">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-blue-500/25">
                     {i + 1}
@@ -157,31 +163,36 @@ function About() {
                 </div>
                 <h3 className="font-semibold text-foreground mb-1.5">{step.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
-              </div>
+              </SpotlightCard>
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
         </section>
 
         {/* FAQ */}
         <section className="mb-14">
-          <h2 className="text-xl font-bold text-foreground mb-6 text-center">Frequently asked questions</h2>
-          <div className="flex flex-col gap-3">
+          <Reveal as="h2" className="text-2xl font-bold tracking-tight text-foreground mb-6 text-center">Frequently asked questions</Reveal>
+          <Stagger className="flex flex-col gap-3" gap={0.06}>
             {FAQS.map((faq, i) => (
-              <FaqItem key={i} q={faq.q} a={faq.a} />
+              <StaggerItem key={i}>
+                <FaqItem q={faq.q} a={faq.a} />
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
         </section>
 
         {/* CTA */}
-        <div className="text-center">
+        <Reveal className="flex justify-center">
+          <Magnetic>
           <Link
             href="/dashboard"
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-xl text-base shadow-lg shadow-blue-500/25 transition-all group"
+            className="btn-shine inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-xl text-base shadow-lg shadow-blue-500/25 transition-all group"
           >
             Get Started Now
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
-        </div>
+          </Magnetic>
+        </Reveal>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { MotionProvider } from "@/components/motion";
 
 export const metadata = {
   title: "Prep-Genin - AI Mock Interview Platform",
@@ -15,12 +16,15 @@ export default function RootLayout({ children }) {
         <body className="antialiased bg-background text-foreground min-h-screen" suppressHydrationWarning>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="light"
+            enableSystem={false}
+            storageKey="prepgenin-theme"
             disableTransitionOnChange
           >
-            <Toaster />
-            {children}
+            <MotionProvider>
+              <Toaster />
+              {children}
+            </MotionProvider>
           </ThemeProvider>
         </body>
       </html>

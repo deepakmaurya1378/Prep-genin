@@ -50,6 +50,14 @@ module.exports = {
   				'5': 'hsl(var(--chart-5))'
   			}
   		},
+  		keyframes: {
+  			'collapsible-down': { from: { height: '0', opacity: '0' }, to: { height: 'var(--radix-collapsible-content-height)', opacity: '1' } },
+  			'collapsible-up': { from: { height: 'var(--radix-collapsible-content-height)', opacity: '1' }, to: { height: '0', opacity: '0' } }
+  		},
+  		animation: {
+  			'collapsible-down': 'collapsible-down 0.3s cubic-bezier(0.21, 0.47, 0.32, 0.98)',
+  			'collapsible-up': 'collapsible-up 0.25s ease-out'
+  		},
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',

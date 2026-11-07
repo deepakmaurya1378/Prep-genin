@@ -21,6 +21,9 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/utils/db';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { CountUp, Reveal, Stagger, StaggerItem } from '@/components/motion';
+import RobotLoader from '@/components/RobotLoader';
 
 function Feedback({ params }) {
   const [feedbackList, setFeedbackList] = useState([]);
@@ -74,9 +77,8 @@ function Feedback({ params }) {
 
   if (loading) {
     return (
-      <div className="py-20 flex flex-col items-center justify-center gap-4">
-        <div className="w-10 h-10 rounded-full border-4 border-blue-500/30 border-t-blue-500 animate-spin" />
-        <p className="text-sm text-slate-400">Loading your feedback report...</p>
+      <div className="py-16 flex flex-col items-center justify-center">
+        <RobotLoader scene="feedback" size="lg" />
       </div>
     );
   }
@@ -103,7 +105,8 @@ function Feedback({ params }) {
       ) : (
         <>
           {/* Hero Summary Banner */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-8 text-white shadow-2xl mb-10">
+          <Reveal className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-indigo-600 to-sky-500 animate-gradient-pan p-8 text-white shadow-2xl mb-10">
+            <div className="absolute inset-0 bg-grid opacity-40 pointer-events-none" />
             {/* Ambient decorations */}
             <div className="absolute right-[-8%] top-[-20%] w-72 h-72 bg-white/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute left-[-5%] bottom-[-30%] w-56 h-56 bg-purple-400/20 rounded-full blur-2xl pointer-events-none" />
@@ -125,7 +128,7 @@ function Feedback({ params }) {
               {/* Score Badge */}
               <div className="flex-shrink-0 flex flex-col items-center bg-white/10 backdrop-blur-md px-7 py-5 rounded-2xl border border-white/20 text-center min-w-[130px]">
                 <Star className="w-7 h-7 text-amber-300 fill-amber-300 mb-1" />
-                <span className="text-4xl font-black text-white leading-none">{avgRating}</span>
+                <CountUp to={avgRating} decimals={1} className="text-4xl font-black text-white leading-none" />
                 <span className="text-sm font-normal text-blue-200 mt-1">/ 10</span>
                 <span className={`text-xs font-bold mt-2 ${scoreLabel.color}`}>{scoreLabel.label}</span>
               </div>
@@ -138,28 +141,30 @@ function Feedback({ params }) {
                 <span>{avgRating}/10</span>
               </div>
               <div className="h-2 rounded-full bg-white/20">
-                <div
-                  className="h-2 rounded-full bg-gradient-to-r from-amber-300 to-emerald-300 transition-all duration-700"
-                  style={{ width: `${(avgRating / 10) * 100}%` }}
+                <motion.div
+                  className="h-2 rounded-full bg-gradient-to-r from-amber-300 to-emerald-300"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(avgRating / 10) * 100}%` }}
+                  transition={{ duration: 1.4, delay: 0.3, ease: [0.21, 0.47, 0.32, 0.98] }}
                 />
               </div>
             </div>
-          </div>
+          </Reveal>
 
           {/* Stats Row */}
-          <div className="grid grid-cols-3 gap-4 mb-8">
+          <Stagger className="grid grid-cols-3 gap-4 mb-8">
             {[
               { icon: <MessageSquareText className="w-4 h-4" />, label: 'Questions', value: feedbackList.length, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-950/30' },
               { icon: <Award className="w-4 h-4" />, label: 'Avg Rating', value: `${avgRating}/10`, color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-950/30' },
               { icon: <TrendingUp className="w-4 h-4" />, label: 'Performance', value: scoreLabel.label, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-950/30' },
             ].map((stat, i) => (
-              <div key={i} className={`${stat.bg} rounded-2xl p-4 text-center border border-slate-100 dark:border-slate-800/60`}>
+              <StaggerItem key={i} className={`${stat.bg} rounded-2xl p-4 text-center border border-slate-100 dark:border-slate-800/60`}>
                 <div className={`flex justify-center mb-1 ${stat.color}`}>{stat.icon}</div>
                 <div className={`text-lg font-bold ${stat.color}`}>{stat.value}</div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">{stat.label}</div>
-              </div>
+              </StaggerItem>
             ))}
-          </div>
+          </Stagger>
 
           {/* Detailed Breakdown */}
           <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
@@ -167,15 +172,15 @@ function Feedback({ params }) {
             Detailed Question Breakdown
           </h2>
 
-          <div className="space-y-4 mb-10">
+          <Stagger className="space-y-4 mb-10" gap={0.05}>
             {feedbackList.map((item, index) => {
               const ratingColors = getRatingColor(item.rating);
               return (
+                <StaggerItem key={index}>
                 <Collapsible
-                  key={index}
                   className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl rounded-2xl border border-slate-200/80 dark:border-slate-800/80 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200"
                 >
-                  <CollapsibleTrigger className="p-5 w-full flex items-center justify-between gap-4 text-left hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                  <CollapsibleTrigger className="group p-5 w-full flex items-center justify-between gap-4 text-left hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="w-8 h-8 rounded-full bg-blue-500/10 dark:bg-blue-400/10 text-blue-600 dark:text-blue-400 font-bold text-xs flex items-center justify-center flex-shrink-0">
                         Q{index + 1}
@@ -188,7 +193,7 @@ function Feedback({ params }) {
                       <span className={`px-3 py-1 rounded-full text-xs font-bold border ${ratingColors.bg} ${ratingColors.text} ${ratingColors.border}`}>
                         {item.rating}/10
                       </span>
-                      <ChevronsUpDown className="h-4 w-4 text-slate-400" />
+                      <ChevronsUpDown className="h-4 w-4 text-slate-400 transition-transform group-data-[state=open]:rotate-180" />
                     </div>
                   </CollapsibleTrigger>
 
@@ -227,9 +232,10 @@ function Feedback({ params }) {
                     </div>
                   </CollapsibleContent>
                 </Collapsible>
+                </StaggerItem>
               );
             })}
-          </div>
+          </Stagger>
 
           {/* Back Button */}
           <div className="flex justify-start">

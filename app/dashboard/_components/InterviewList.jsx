@@ -5,21 +5,30 @@ import React, { useState,useEffect } from 'react'
 import { db } from '@/utils/db';
 import { eq, desc } from 'drizzle-orm';
 import InterviewItemCard from './InterviewItemCard';
+import { motion, AnimatePresence } from 'framer-motion';
+import RobotLoader from '@/components/RobotLoader';
 
 function InterviewList() {
 
     const { user } = useUser();
     const [interviewList, setInterviewList] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         user && GetInterviewList();
     },[user])
     const GetInterviewList = async () => {
-        const result = await db.select()
-            .from(MockInterview)
-            .where(eq(MockInterview.createdBy,user.emailAddresses?.[0]?.emailAddress))
-            .orderBy(desc(MockInterview.id))
-        setInterviewList(result);
+        try {
+            const result = await db.select()
+                .from(MockInterview)
+                .where(eq(MockInterview.createdBy,user.emailAddresses?.[0]?.emailAddress))
+                .orderBy(desc(MockInterview.id))
+            setInterviewList(result);
+        } catch (error) {
+            console.error("Error loading interviews:", error);
+        } finally {
+            setLoading(false);
+        }
     }
 
     const onDeleted = (mockId) => {
@@ -28,16 +37,27 @@ function InterviewList() {
 
   return (
     <div>
-      {interviewList && interviewList.length > 0 ? (
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-          {interviewList.map((interview, index) => (
-            <InterviewItemCard
-              interview={interview}
-              key={interview.mockId || index}
-              onDeleted={onDeleted}
-            />
-          ))}
+      {loading ? (
+        <div className="py-8 flex justify-center">
+          <RobotLoader scene="history" />
         </div>
+      ) : interviewList && interviewList.length > 0 ? (
+        <motion.div layout className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+          <AnimatePresence mode="popLayout">
+            {interviewList.map((interview, index) => (
+              <motion.div
+                key={interview.mockId || index}
+                layout
+                initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.4, delay: Math.min(index, 8) * 0.06, ease: [0.21, 0.47, 0.32, 0.98] }}
+              >
+                <InterviewItemCard interview={interview} onDeleted={onDeleted} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       ) : (
         <div className="py-12 text-center flex flex-col items-center justify-center">
           <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 mb-4">

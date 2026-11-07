@@ -1,8 +1,8 @@
 "use client";
 import { SignUp } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
-import Image from 'next/image';
 import Link from 'next/link';
+import Logo from '@/components/Logo';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
@@ -36,13 +36,7 @@ export default function Page() {
       </div>
 
       <Link href="/" className="relative z-10 mb-8 transition-transform duration-200 hover:scale-105">
-        <Image
-          src="/Prepgeninlogo.png"
-          width={170}
-          height={36}
-          alt="Prep-Genin"
-          className="object-contain brightness-125 filter drop-shadow-sm w-36 sm:w-[170px] h-auto"
-        />
+        <Logo variant="light" size="lg" />
       </Link>
 
       <h1 className="relative z-10 text-xl sm:text-2xl font-bold text-white text-center mb-6 animate-fade-in">

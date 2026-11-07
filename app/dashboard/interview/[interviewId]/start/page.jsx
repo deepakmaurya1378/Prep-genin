@@ -8,6 +8,7 @@ import RecordAnswerSection from './_components/RecordAnswerSection';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, ArrowRight, CheckCircle, Flag } from 'lucide-react';
+import RobotLoader from '@/components/RobotLoader';
 
 function StartInterview({ params }) {
   const [interviewData, setInterviewData] = useState(null);
@@ -53,9 +54,8 @@ function StartInterview({ params }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-5">
-        <div className="w-12 h-12 rounded-full border-4 border-blue-500/30 border-t-blue-500 animate-spin" />
-        <p className="text-slate-400 text-sm animate-pulse">Loading your interview session...</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <RobotLoader scene="setup" size="lg" />
       </div>
     );
   }
